@@ -107,6 +107,10 @@ Keep the seed, manifests, augmentation, optimizer, training budget, and model
 selection criterion identical. Compare in-domain performance and both external
 generalization gaps.
 
+All primary runs have the same stopping budget: maximum 100 epochs, minimum 40
+epochs, and patience 10 on validation ROC-AUC. Checkpoint selection still
+considers every epoch, including epochs 1-39.
+
 For frozen ViT-B/16, the encoder's 768-dimensional CLS representation is fed
 to the same 256-unit MLP. ViT does not use the CNN global-average-pooling step.
 

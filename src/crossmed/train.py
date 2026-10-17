@@ -41,6 +41,9 @@ def train_experiment(config="configs/baseline.yaml"):
 
     model = build_model(**cfg["model"]).to(device)
     train_cfg = cfg["training"]
+    minimum_epochs = int(train_cfg.get("minimum_epochs", 0))
+    if minimum_epochs > train_cfg["epochs"]:
+        raise ValueError("training.minimum_epochs cannot exceed training.epochs")
     weights = None
     if train_cfg["use_class_weights"]:
         counts = pd.read_csv(train_manifest).label.value_counts().reindex([0, 1]).values
@@ -73,7 +76,7 @@ def train_experiment(config="configs/baseline.yaml"):
             torch.save({"model_state": model.state_dict(), "config": cfg, "epoch": epoch}, output / "best.pt")
         else:
             stale += 1
-            if stale >= train_cfg["patience"]:
+            if epoch >= minimum_epochs and stale >= train_cfg["patience"]:
                 break
     save_json({"history": history, "best_validation_score": best}, output / "training_history.json")
     result = {"history": history, "best_validation_score": best,

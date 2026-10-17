@@ -104,6 +104,11 @@ crossmed-evaluate --config configs/baseline.yaml
 
 Outputs are written under `outputs/baseline_resnet18/`: the best checkpoint, training history, per-image predictions, aggregate metrics, 95% bootstrap intervals, generalization gaps, and confidence-based selective evaluation.
 
+All primary experiments use a maximum of 100 epochs, a minimum of 40 epochs,
+and early-stopping patience of 10 based on validation ROC-AUC. The best
+checkpoint is tracked from epoch 1, but training cannot stop before completing
+epoch 40.
+
 ## Recommended experiment matrix
 
 The planned primary experiments are:
