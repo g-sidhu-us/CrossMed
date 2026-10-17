@@ -25,6 +25,7 @@ dependencies = [
 crossmed-prepare = "crossmed.prepare:main"
 crossmed-train = "crossmed.train:main"
 crossmed-evaluate = "crossmed.evaluate:main"
+crossmed-run = "crossmed.experiments:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

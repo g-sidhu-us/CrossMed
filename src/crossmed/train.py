@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from .data import make_loader
 from .metrics import classification_metrics
-from .models import build_model
+from .models import build_model, keep_frozen_backbone_in_eval
 from .utils import load_config, save_json, seed_everything
 
 
@@ -46,13 +46,17 @@ def train_experiment(config="configs/baseline.yaml"):
         counts = pd.read_csv(train_manifest).label.value_counts().reindex([0, 1]).values
         weights = torch.tensor(len(counts) and counts.sum() / (2 * counts), dtype=torch.float32, device=device)
     criterion = torch.nn.CrossEntropyLoss(weight=weights)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=train_cfg["learning_rate"], weight_decay=train_cfg["weight_decay"])
+    trainable_parameters = [parameter for parameter in model.parameters() if parameter.requires_grad]
+    optimizer = torch.optim.AdamW(trainable_parameters, lr=train_cfg["learning_rate"],
+                                  weight_decay=train_cfg["weight_decay"])
     scaler = torch.amp.GradScaler("cuda", enabled=train_cfg["amp"] and device.type == "cuda")
     output = Path(cfg["output_dir"]); output.mkdir(parents=True, exist_ok=True)
     best, stale, history = -float("inf"), 0, []
 
     for epoch in range(1, train_cfg["epochs"] + 1):
-        model.train(); losses = []
+        model.train()
+        keep_frozen_backbone_in_eval(model)
+        losses = []
         for batch in tqdm(train_loader, desc=f"epoch {epoch}"):
             optimizer.zero_grad(set_to_none=True)
             with torch.autocast(device_type=device.type, enabled=train_cfg["amp"] and device.type == "cuda"):

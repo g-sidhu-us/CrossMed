@@ -12,6 +12,9 @@ model:
   architecture: resnet18
   pretrained: true
   dropout: 0.2
+  head: simple
+  hidden_dim: 256
+  freeze_backbone: false
 
 training:
   epochs: 30

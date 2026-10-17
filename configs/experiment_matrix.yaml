@@ -1,0 +1,7 @@
+experiments:
+  resnet18_finetuned: baseline.yaml
+  resnet18_frozen: resnet18_frozen.yaml
+  resnet50_frozen: resnet50_frozen.yaml
+  resnet101_frozen: resnet101_frozen.yaml
+  vit_b16_frozen: vit_frozen.yaml
+
