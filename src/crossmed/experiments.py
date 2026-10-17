@@ -56,7 +56,7 @@ def aggregate_results(matrix_path="configs/experiment_matrix.yaml",
 
 def run_experiment_matrix(matrix_path="configs/experiment_matrix.yaml",
                           selected=None, stage="all", skip_completed=True,
-                          cleanup_between_runs=False):
+                          cleanup_between_runs=False, strict_missing=False):
     """Train/evaluate selected experiments and return the aggregate table."""
     configs = load_experiment_matrix(matrix_path)
     selected = list(selected) if selected else list(configs)
@@ -64,6 +64,7 @@ def run_experiment_matrix(matrix_path="configs/experiment_matrix.yaml",
     if unknown:
         raise ValueError(f"Unknown experiments {sorted(unknown)}; choose from {sorted(configs)}")
 
+    status_rows = []
     for name in selected:
         config_path = configs[name]
         with Path(config_path).open(encoding="utf-8") as handle:
@@ -79,20 +80,36 @@ def run_experiment_matrix(matrix_path="configs/experiment_matrix.yaml",
             if stage in {"all", "train"}:
                 if skip_completed and checkpoint.exists():
                     print(f"Skipping training; checkpoint exists: {checkpoint}")
+                    status_rows.append({"experiment": name, "stage": "train",
+                                        "status": "checkpoint_exists", "path": str(checkpoint)})
                 else:
                     train_experiment(config_path)
+                    status_rows.append({"experiment": name, "stage": "train",
+                                        "status": "trained", "path": str(checkpoint)})
             if stage in {"all", "evaluate"}:
                 if not checkpoint.exists():
-                    raise FileNotFoundError(f"Train {name} first; missing {checkpoint}")
+                    message = f"Skipping {name}; checkpoint not found: {checkpoint}"
+                    if strict_missing:
+                        raise FileNotFoundError(message)
+                    print(message)
+                    status_rows.append({"experiment": name, "stage": "evaluate",
+                                        "status": "missing_checkpoint", "path": str(checkpoint)})
+                    continue
                 if skip_completed and evaluation.exists():
                     print(f"Skipping evaluation; results exist: {evaluation}")
+                    status_rows.append({"experiment": name, "stage": "evaluate",
+                                        "status": "evaluation_exists", "path": str(evaluation)})
                 else:
                     evaluate_experiment(config_path, checkpoint)
+                    status_rows.append({"experiment": name, "stage": "evaluate",
+                                        "status": "evaluated", "path": str(evaluation)})
         finally:
             if cleanup_between_runs:
                 # Intended for sequential local/notebook execution on a
                 # memory-limited GPU. CARC jobs normally run one model each.
                 release_gpu_memory()
+    if stage == "train":
+        return pd.DataFrame(status_rows)
     return aggregate_results(matrix_path)
 
 
@@ -104,9 +121,12 @@ def main():
     parser.add_argument("--force", action="store_true", help="Rerun completed stages")
     parser.add_argument("--cleanup-between-runs", action="store_true",
                         help="Unload CUDA cache between sequential models")
+    parser.add_argument("--strict-missing", action="store_true",
+                        help="Fail instead of skipping an untrained experiment")
     args = parser.parse_args()
     table = run_experiment_matrix(args.matrix, args.experiments, args.stage,
-                                  not args.force, args.cleanup_between_runs)
+                                  not args.force, args.cleanup_between_runs,
+                                  args.strict_missing)
     if table.empty:
         print("No evaluation results are available yet.")
     else:

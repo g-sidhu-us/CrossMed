@@ -83,25 +83,30 @@ pooling to match the notebook's default `poolingType="gap"` behavior.
 
 ## Planned experiment matrix
 
-The primary systems are:
+There are two independent experimental variables:
 
-1. Fully trainable ResNet-18 with the simple head.
-2. Frozen ResNet-18 with the notebook MLP head.
-3. Frozen ResNet-50 with the notebook MLP head.
-4. Frozen ResNet-101 with the notebook MLP head.
-5. Frozen ViT-B/16 with the notebook MLP head.
+1. **Feature weights:** frozen or fully trainable.
+2. **Classifier head:** simple linear or the notebook 256-unit MLP.
 
-Comparing experiments 2-4 keeps the training strategy and classifier fixed,
-so the main changed variable is ResNet capacity. Comparing experiments 1 and 2
-is not a pure freezing ablation because their heads also differ. If time allows,
-add a frozen ResNet-18 with the simple head to isolate freezing from head depth:
+Changing both simultaneously makes the cause of a performance difference
+unclear. CrossMed therefore uses a staged ablation:
 
-```yaml
-# Controlled run 1
-architecture: resnet18
-freeze_backbone: true
-head: simple
-```
+- Stage 1: ResNet-18/50/101, fully trainable, simple head.
+- Stage 2: ResNet-18/50/101, frozen, simple head.
+- Stage 3: ResNet-18/50/101 with the MLP head under both frozen and fully
+  trainable weight conditions.
+- Stage 4: compare the selected CNN with ViT.
+
+The complete ResNet design is factorial:
+
+| Variable | Level 1 | Level 2 |
+|---|---|---|
+| Feature weights | Frozen | Fully trainable |
+| Classifier | Simple linear | 256-unit MLP |
+
+This produces four conditions for each of ResNet-18, ResNet-50, and
+ResNet-101. It allows the effect of weight adaptation, head depth, and their
+interaction to be measured separately.
 
 Keep the seed, manifests, augmentation, optimizer, training budget, and model
 selection criterion identical. Compare in-domain performance and both external

@@ -111,15 +111,54 @@ epoch 40.
 
 ## Recommended experiment matrix
 
-The planned primary experiments are:
+The experiments are organized in stages so backbone training and classifier
+depth are not changed at the same time.
+
+### Stage 1: select a fully trainable ResNet
+
+| Experiment | Backbone | Backbone training | Head |
+|---|---|---|---|
+| R18 fine-tuned | ResNet-18 | Fully trainable | `Dropout -> Linear(2)` |
+| R50 fine-tuned | ResNet-50 | Fully trainable | `Dropout -> Linear(2)` |
+| R101 fine-tuned | ResNet-101 | Fully trainable | `Dropout -> Linear(2)` |
+
+Run these first. They isolate backbone depth while holding the head and training
+strategy constant.
+
+### Stage 2: isolate weight freezing
+
+For each ResNet, compare its Stage 1 run against the corresponding frozen model
+with the same simple head. The only intended changed variable is whether the
+pretrained feature weights are updated.
+
+### Stage 3: test classifier depth
+
+Compare the simple head with the notebook MLP head (`features -> 256 -> 2`)
+under both weight conditions. This completes a 2 x 2 experiment for each
+ResNet: frozen/simple, frozen/MLP, fine-tuned/simple, and fine-tuned/MLP.
+
+The complete registry is:
 
 | Experiment | Backbone | Backbone training | Classifier head | Configuration |
 |---|---|---|---|---|
 | Baseline | ResNet-18 | Fully trainable | Dropout + Linear(2) | `baseline.yaml` |
-| Frozen R18 | ResNet-18 | Frozen | 256-unit MLP | `resnet18_frozen.yaml` |
-| Frozen R50 | ResNet-50 | Frozen | 256-unit MLP | `resnet50_frozen.yaml` |
-| Frozen R101 | ResNet-101 | Frozen | 256-unit MLP | `resnet101_frozen.yaml` |
+| Fine-tuned R50 | ResNet-50 | Fully trainable | Simple | `resnet50_finetuned.yaml` |
+| Fine-tuned R101 | ResNet-101 | Fully trainable | Simple | `resnet101_finetuned.yaml` |
+| Fine-tuned-MLP R18 | ResNet-18 | Fully trainable | 256-unit MLP | `resnet18_finetuned_mlp.yaml` |
+| Fine-tuned-MLP R50 | ResNet-50 | Fully trainable | 256-unit MLP | `resnet50_finetuned_mlp.yaml` |
+| Fine-tuned-MLP R101 | ResNet-101 | Fully trainable | 256-unit MLP | `resnet101_finetuned_mlp.yaml` |
+| Frozen-simple R18 | ResNet-18 | Frozen | Simple | `resnet18_frozen_simple.yaml` |
+| Frozen-simple R50 | ResNet-50 | Frozen | Simple | `resnet50_frozen_simple.yaml` |
+| Frozen-simple R101 | ResNet-101 | Frozen | Simple | `resnet101_frozen_simple.yaml` |
+| Frozen-MLP R18/R50/R101 | ResNet family | Frozen | 256-unit MLP | existing frozen configs |
 | Frozen ViT | ViT-B/16 | Frozen | 256-unit MLP | `vit_frozen.yaml` |
+
+For each ResNet depth, the controlled comparison is:
+
+| Feature weights | Simple head | 256-unit MLP head |
+|---|---|---|
+| Frozen | Yes | Yes |
+| Fully trainable | Yes | Yes |
 
 Run at least three seeds for the final selected experiments. The frozen
 ResNet sequence tests whether larger pretrained feature extractors generalize
@@ -132,17 +171,11 @@ Run the complete matrix one configuration at a time:
 crossmed-train --config configs/baseline.yaml
 crossmed-evaluate --config configs/baseline.yaml
 
-crossmed-train --config configs/resnet18_frozen.yaml
-crossmed-evaluate --config configs/resnet18_frozen.yaml
+crossmed-train --config configs/resnet50_finetuned.yaml
+crossmed-evaluate --config configs/resnet50_finetuned.yaml
 
-crossmed-train --config configs/resnet50_frozen.yaml
-crossmed-evaluate --config configs/resnet50_frozen.yaml
-
-crossmed-train --config configs/resnet101_frozen.yaml
-crossmed-evaluate --config configs/resnet101_frozen.yaml
-
-crossmed-train --config configs/vit_frozen.yaml
-crossmed-evaluate --config configs/vit_frozen.yaml
+crossmed-train --config configs/resnet101_finetuned.yaml
+crossmed-evaluate --config configs/resnet101_finetuned.yaml
 ```
 
 For easier execution, all runs are registered in
@@ -155,14 +188,14 @@ crossmed-run
 Run only selected experiments:
 
 ```bash
-crossmed-run --experiments resnet18_finetuned resnet18_frozen
+crossmed-run --experiments resnet18_finetuned resnet50_finetuned resnet101_finetuned
 ```
 
 Run training and evaluation separately:
 
 ```bash
-crossmed-run --stage train --experiments resnet50_frozen
-crossmed-run --stage evaluate --experiments resnet50_frozen
+crossmed-run --stage train --experiments resnet50_finetuned
+crossmed-run --stage evaluate --experiments resnet50_finetuned
 ```
 
 Existing checkpoints and evaluation files are skipped automatically. Use
@@ -170,11 +203,15 @@ Existing checkpoints and evaluation files are skipped automatically. Use
 updates `results/model_comparison.csv`, which can be loaded directly for the
 report or presentation.
 
+The training stage returns a checkpoint-status table, not performance metrics.
+Metrics appear only after evaluation, preventing older `evaluation.json` files
+from being mistaken for the model that was just trained.
+
 Each training run saves its best validation checkpoint to the experiment's
 `best.pt`. Saved checkpoints can be evaluated later without retraining:
 
 ```bash
-crossmed-run --stage evaluate --experiments resnet101_frozen
+crossmed-run --stage evaluate --experiments resnet101_finetuned
 ```
 
 For a local machine that runs several models sequentially, enable explicit GPU
@@ -193,6 +230,8 @@ Checkpoint behavior is controlled explicitly:
 - Normal run: an existing `best.pt` is treated as a completed training result
   and is not retrained.
 - `--stage evaluate`: load the existing checkpoint and produce test results.
+- During list evaluation, experiments without `best.pt` are reported and
+  skipped; trained experiments continue. Add `--strict-missing` to fail instead.
 - `--force`: start fresh training and replace that experiment's checkpoint and
   results. Use this after intentionally changing its configuration.
 - For independent repetitions, change the seed and output directory so earlier

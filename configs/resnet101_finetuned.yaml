@@ -1,0 +1,6 @@
+seed: 566
+data: {root: data, manifests_dir: data/manifests, image_size: 224, num_workers: 4, train_batch_size: 8, eval_batch_size: 16}
+model: {architecture: resnet101, pretrained: true, freeze_backbone: false, head: simple, hidden_dim: 256, dropout: 0.2}
+training: {epochs: 100, minimum_epochs: 40, learning_rate: 0.0001, weight_decay: 0.0001, patience: 10, monitor: roc_auc, use_class_weights: true, amp: true}
+evaluation: {threshold: 0.5, bootstrap_samples: 1000, abstention_coverages: [1.0, 0.9, 0.8, 0.7]}
+output_dir: outputs/resnet101_finetuned_simple

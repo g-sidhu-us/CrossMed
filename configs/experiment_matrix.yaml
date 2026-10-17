@@ -1,7 +1,15 @@
 experiments:
   resnet18_finetuned: baseline.yaml
-  resnet18_frozen: resnet18_frozen.yaml
-  resnet50_frozen: resnet50_frozen.yaml
-  resnet101_frozen: resnet101_frozen.yaml
+  resnet50_finetuned: resnet50_finetuned.yaml
+  resnet101_finetuned: resnet101_finetuned.yaml
+  resnet18_finetuned_mlp: resnet18_finetuned_mlp.yaml
+  resnet50_finetuned_mlp: resnet50_finetuned_mlp.yaml
+  resnet101_finetuned_mlp: resnet101_finetuned_mlp.yaml
+  resnet18_frozen_simple: resnet18_frozen_simple.yaml
+  resnet50_frozen_simple: resnet50_frozen_simple.yaml
+  resnet101_frozen_simple: resnet101_frozen_simple.yaml
+  resnet18_frozen_mlp: resnet18_frozen.yaml
+  resnet50_frozen_mlp: resnet50_frozen.yaml
+  resnet101_frozen_mlp: resnet101_frozen.yaml
   vit_b16_frozen: vit_frozen.yaml
 
