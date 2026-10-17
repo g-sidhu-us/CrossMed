@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import gc
 import random
 from pathlib import Path
 
@@ -39,4 +40,12 @@ def save_json(value: dict, path: str | Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         json.dump(value, handle, indent=2, allow_nan=False)
+
+
+def release_gpu_memory() -> None:
+    """Release unreferenced Python objects and cached CUDA allocations."""
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.reset_peak_memory_stats()
 

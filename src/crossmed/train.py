@@ -76,8 +76,9 @@ def train_experiment(config="configs/baseline.yaml"):
             if stale >= train_cfg["patience"]:
                 break
     save_json({"history": history, "best_validation_score": best}, output / "training_history.json")
-    return {"history": history, "best_validation_score": best,
-            "checkpoint_path": str(output / "best.pt")}
+    result = {"history": history, "best_validation_score": best,
+              "checkpoint_path": str(output / "best.pt")}
+    return result
 
 
 def main():

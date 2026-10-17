@@ -165,6 +165,34 @@ Existing checkpoints and evaluation files are skipped automatically. Use
 updates `results/model_comparison.csv`, which can be loaded directly for the
 report or presentation.
 
+Each training run saves its best validation checkpoint to the experiment's
+`best.pt`. Saved checkpoints can be evaluated later without retraining:
+
+```bash
+crossmed-run --stage evaluate --experiments resnet101_frozen
+```
+
+For a local machine that runs several models sequentially, enable explicit GPU
+cleanup between models:
+
+```bash
+crossmed-run --cleanup-between-runs
+```
+
+This deletes unreferenced objects, runs garbage collection, and clears cached
+CUDA allocations before loading the next model. It is optional because CARC
+should normally run one experiment per independent job.
+
+Checkpoint behavior is controlled explicitly:
+
+- Normal run: an existing `best.pt` is treated as a completed training result
+  and is not retrained.
+- `--stage evaluate`: load the existing checkpoint and produce test results.
+- `--force`: start fresh training and replace that experiment's checkpoint and
+  results. Use this after intentionally changing its configuration.
+- For independent repetitions, change the seed and output directory so earlier
+  runs remain available instead of being overwritten.
+
 ## Classifier architectures
 
 ### Shared preprocessing
@@ -229,9 +257,13 @@ python -m ipykernel install --user --name crossmed --display-name "Python (Cross
 jupyter lab
 ```
 
-Open the notebooks in numerical order. Notebook 04 provides the easiest way to
-select and run the complete experiment matrix. They call the same public
-functions as the CLI:
+Open the three notebooks in numerical order:
+
+1. `01_prepare_data.ipynb` creates and audits manifests.
+2. `02_train_models.ipynb` selects and trains one or more experiments.
+3. `03_evaluate_models.ipynb` loads saved checkpoints and compares results.
+
+They call the same public functions as the CLI:
 
 ```python
 from crossmed.prepare import prepare_all

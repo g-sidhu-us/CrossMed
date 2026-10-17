@@ -112,9 +112,13 @@ to the same 256-unit MLP. ViT does not use the CNN global-average-pooling step.
 
 ![Frozen ViT-B/16 with MLP classifier](docs/images/vit_frozen_mlp.svg)
 
-All primary systems are registered in `configs/experiment_matrix.yaml` and can
-be executed through `crossmed-run` or notebook 04. Aggregate results are saved
-to `results/model_comparison.csv`.
+All primary systems are registered in `configs/experiment_matrix.yaml`. They
+can be trained through `crossmed-run` or notebook 02 and evaluated through
+notebook 03. Aggregate results are saved to `results/model_comparison.csv`.
+
+For memory-limited local notebook runs, the matrix runner can unload cached GPU
+state between architectures. This is opt-in and is not required when CARC runs
+one configuration per independent job.
 
 ## Output dimensions
 
