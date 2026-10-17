@@ -4,7 +4,7 @@
   <text x="55" y="48" class="title">Architecture C — Frozen ViT-B/16 + Notebook MLP Head</text>
   <text x="55" y="76" class="sub">ViT supplies a CLS representation; unlike the CNN models, no global-average-pooling block is used</text>
   <rect x="40" y="155" width="145" height="110" class="box" fill="#e8f1ff" stroke="#3b78c8"/>
-  <text x="113" y="198" class="h" text-anchor="middle">Input</text><text x="113" y="227" class="b" text-anchor="middle">224 × 224 × 3</text>
+  <text x="113" y="198" class="h" text-anchor="middle">Preprocessed</text><text x="113" y="227" class="b" text-anchor="middle">3 × 224 × 224</text>
   <line x1="185" y1="210" x2="230" y2="210" class="arrow"/>
   <rect x="235" y="145" width="170" height="130" class="box" fill="#e7f7ef" stroke="#269365"/>
   <text x="320" y="190" class="h" text-anchor="middle">16 × 16 patches</text><text x="320" y="219" class="b" text-anchor="middle">14 × 14 grid</text><text x="320" y="244" class="b" text-anchor="middle">196 tokens + CLS</text>

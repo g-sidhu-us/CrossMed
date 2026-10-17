@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="360" viewBox="0 0 1400 360">
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#496078"/></marker><style>text{font-family:Arial,sans-serif;fill:#17263a}.title{font-size:28px;font-weight:700}.sub{font-size:17px;fill:#496078}.h{font-size:18px;font-weight:700}.b{font-size:15px}.box{stroke-width:2;rx:16}.arrow{stroke:#496078;stroke-width:3;marker-end:url(#a)}</style></defs>
+  <rect width="1400" height="360" fill="#f6f8fb"/>
+  <text x="55" y="48" class="title">Shared Image Preprocessing — Outside the Neural Network</text>
+  <text x="55" y="76" class="sub">The same deterministic evaluation preprocessing is applied to BUS-BRA, BrEaST, and BUSI</text>
+  <rect x="35" y="135" width="170" height="110" class="box" fill="#e8f1ff" stroke="#3b78c8"/>
+  <text x="120" y="178" class="h" text-anchor="middle">Raw ultrasound</text><text x="120" y="207" class="b" text-anchor="middle">PNG / variable size</text><text x="120" y="230" class="b" text-anchor="middle">grayscale or RGB</text>
+  <line x1="205" y1="190" x2="250" y2="190" class="arrow"/>
+  <rect x="255" y="135" width="160" height="110" class="box" fill="#e7f7ef" stroke="#269365"/>
+  <text x="335" y="179" class="h" text-anchor="middle">Convert to RGB</text><text x="335" y="208" class="b" text-anchor="middle">3 channels</text><text x="335" y="231" class="b" text-anchor="middle">no learned weights</text>
+  <line x1="415" y1="190" x2="460" y2="190" class="arrow"/>
+  <rect x="465" y="135" width="160" height="110" class="box" fill="#e7f7ef" stroke="#269365"/>
+  <text x="545" y="179" class="h" text-anchor="middle">Resize</text><text x="545" y="208" class="b" text-anchor="middle">224 × 224</text><text x="545" y="231" class="b" text-anchor="middle">all splits</text>
+  <line x1="625" y1="190" x2="670" y2="190" class="arrow"/>
+  <rect x="675" y="120" width="210" height="140" class="box" fill="#fff3dd" stroke="#d58a18" stroke-dasharray="7 5"/>
+  <text x="780" y="159" class="h" text-anchor="middle">Augmentation</text><text x="780" y="187" class="b" text-anchor="middle">flip • rotation</text><text x="780" y="211" class="b" text-anchor="middle">translation • scaling</text><text x="780" y="240" class="b" text-anchor="middle">TRAINING ONLY</text>
+  <line x1="885" y1="190" x2="930" y2="190" class="arrow"/>
+  <rect x="935" y="135" width="180" height="110" class="box" fill="#e7f7ef" stroke="#269365"/>
+  <text x="1025" y="179" class="h" text-anchor="middle">ToTensor</text><text x="1025" y="208" class="b" text-anchor="middle">float values</text><text x="1025" y="231" class="b" text-anchor="middle">C × H × W</text>
+  <line x1="1115" y1="190" x2="1160" y2="190" class="arrow"/>
+  <rect x="1165" y="120" width="200" height="140" class="box" fill="#f5eaff" stroke="#8454bd"/>
+  <text x="1265" y="159" class="h" text-anchor="middle">Normalize</text><text x="1265" y="187" class="b" text-anchor="middle">ImageNet mean / std</text><text x="1265" y="214" class="b" text-anchor="middle">preprocessed tensor</text><text x="1265" y="239" class="b" text-anchor="middle">3 × 224 × 224</text>
+  <text x="55" y="320" class="sub">Validation and test images bypass the dashed augmentation block; normalization is fixed and is not learned from external datasets.</text>
+</svg>

@@ -167,6 +167,13 @@ report or presentation.
 
 ## Classifier architectures
 
+### Shared preprocessing
+
+![Shared image preprocessing pipeline](docs/images/preprocessing_pipeline.svg)
+
+This preprocessing occurs before every architecture. The augmentation block is
+used only during training; validation and all test datasets bypass it.
+
 ### Fully trainable baseline
 
 ![Fully trainable ResNet-18 baseline](docs/images/resnet18_finetuned.svg)

@@ -4,6 +4,15 @@ CrossMed compares two classifier designs. Both consume the same 224 x 224
 three-channel image, use ImageNet initialization, produce two raw logits, and
 are evaluated on exactly the same fixed dataset manifests.
 
+## Shared preprocessing
+
+![Shared image preprocessing pipeline](docs/images/preprocessing_pipeline.svg)
+
+Preprocessing runs in the dataset loader before the tensor reaches any model.
+Augmentation is enabled only for the BUS-BRA training split. Validation,
+in-domain test, and both external tests use only RGB conversion, resizing,
+tensor conversion, and fixed ImageNet normalization.
+
 ## Architecture A: simple fine-tuning baseline
 
 ![Fully trainable ResNet-18 baseline](docs/images/resnet18_finetuned.svg)
