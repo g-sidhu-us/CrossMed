@@ -27,6 +27,10 @@ def _resolve_image(root, value):
     if direct.is_file():
         return direct.resolve()
     matches = list(root.rglob(Path(value).name))
+    if not matches and Path(value).suffix == "":
+        # Metadata such as BUS-BRA may store an image ID without its extension.
+        matches = [p for p in root.rglob(f"{Path(value).name}.*")
+                   if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES]
     if len(matches) != 1:
         raise ValueError(f"Expected one image for {value!r}; found {len(matches)}")
     return matches[0].resolve()
@@ -41,9 +45,15 @@ def _map_label(value):
     return None
 
 
+def _read_table(path: Path):
+    if path.suffix.lower() in {".xlsx", ".xls"}:
+        return pd.read_excel(path)
+    return pd.read_csv(path)
+
+
 def prepare_busbra(root: Path, metadata: Path):
-    frame = pd.read_csv(metadata)
-    image_col = _find_col(frame, ["image", "image_name", "filename", "file_name", "path"])
+    frame = _read_table(metadata)
+    image_col = _find_col(frame, ["id", "image", "image_name", "filename", "file_name", "path"])
     label_col = _find_col(frame, ["pathology", "classification", "label"])
     patient_col = _find_col(frame, ["patient_id", "patient", "case_id", "case"], required=False)
     out = pd.DataFrame({
@@ -59,18 +69,28 @@ def prepare_busbra(root: Path, metadata: Path):
 
 def prepare_breast(root: Path, metadata: Path):
     frame = pd.read_excel(metadata)
-    image_col = _find_col(frame, ["filename(s) of ultrasound b-mode image(s)", "image", "filename", "file_name"])
+    image_col = _find_col(frame, ["image_filename", "filename(s) of ultrasound b-mode image(s)",
+                                        "image", "filename", "file_name"])
     label_col = _find_col(frame, ["classification", "pathology", "label"])
+    patient_col = _find_col(frame, ["caseid", "case_id", "patient_id", "patient", "case"])
+    metadata_columns = [
+        "Pixel_size", "Age", "Tissue_composition", "Signs", "Symptoms", "Shape",
+        "Margin", "Echogenicity", "Posterior_features", "Halo", "Calcifications",
+        "Skin_thickening", "Interpretation", "BIRADS", "Verification", "Diagnosis",
+    ]
+    available_metadata = [column for column in metadata_columns if column in frame.columns]
     rows = []
-    for idx, row in frame.iterrows():
+    for _, row in frame.iterrows():
         label = _map_label(row[label_col])
         if label is None:
             continue
         # Some cells contain more than one image filename.
         names = [x.strip() for x in re.split(r"[;,\n]", str(row[image_col])) if x.strip()]
         for name in names:
-            rows.append({"image_path": str(_resolve_image(root, name)), "label": label,
-                         "sample_id": name, "patient_id": str(idx), "dataset": "BrEaST"})
+            record = {"image_path": str(_resolve_image(root, name)), "label": label,
+                      "sample_id": name, "patient_id": str(row[patient_col]), "dataset": "BrEaST"}
+            record.update({column: row[column] for column in available_metadata})
+            rows.append(record)
     return pd.DataFrame(rows)
 
 
@@ -106,31 +126,65 @@ def split_source(frame, seed, allow_image_split=False):
     return train, val, test
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Create standardized manifests for all three datasets.")
-    parser.add_argument("--busbra-root", type=Path, required=True)
-    parser.add_argument("--busbra-csv", type=Path, required=True)
-    parser.add_argument("--breast-root", type=Path, required=True)
-    parser.add_argument("--breast-xlsx", type=Path, required=True)
-    parser.add_argument("--busi-root", type=Path, required=True)
-    parser.add_argument("--output-dir", type=Path, default=Path("data/manifests"))
-    parser.add_argument("--seed", type=int, default=566)
-    parser.add_argument("--allow-image-split", action="store_true")
-    args = parser.parse_args()
-
-    source, _ = prepare_busbra(args.busbra_root, args.busbra_csv)
-    train, val, test = split_source(source, args.seed, args.allow_image_split)
+def prepare_all(busbra_root, busbra_csv, breast_root, breast_xlsx, busi_root,
+                output_dir="data/manifests", seed=566, allow_image_split=False,
+                data_root="data"):
+    """Build and save all manifests; usable from Python, notebooks, and the CLI."""
+    output_dir = Path(output_dir)
+    source, _ = prepare_busbra(Path(busbra_root), Path(busbra_csv))
+    train, val, test = split_source(source, seed, allow_image_split)
     manifests = {
         "busbra_train.csv": train,
         "busbra_val.csv": val,
         "busbra_test.csv": test,
-        "breast_test.csv": prepare_breast(args.breast_root, args.breast_xlsx),
-        "busi_test.csv": prepare_busi(args.busi_root),
+        "breast_test.csv": prepare_breast(Path(breast_root), Path(breast_xlsx)),
+        "busi_test.csv": prepare_busi(Path(busi_root)),
     }
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    data_root = Path(data_root).resolve()
     for name, frame in manifests.items():
-        frame.to_csv(args.output_dir / name, index=False)
-        print(f"{name}: n={len(frame)}, benign={(frame.label == 0).sum()}, malignant={(frame.label == 1).sum()}")
+        relative_paths = []
+        for image_path in frame.image_path:
+            try:
+                relative_paths.append(str(Path(image_path).resolve().relative_to(data_root)))
+            except ValueError as exc:
+                raise ValueError(
+                    f"Image {image_path} is outside data root {data_root}. "
+                    "Place all datasets below data_root or pass the correct data_root."
+                ) from exc
+        frame["image_path"] = relative_paths
+    output_dir.mkdir(parents=True, exist_ok=True)
+    summary = {}
+    for name, frame in manifests.items():
+        path = output_dir / name
+        frame.to_csv(path, index=False)
+        summary[name] = {
+            "path": str(path), "total": len(frame),
+            "benign": int((frame.label == 0).sum()),
+            "malignant": int((frame.label == 1).sum()),
+        }
+    return summary
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Create standardized manifests for all three datasets.")
+    parser.add_argument("--busbra-root", type=Path, required=True)
+    parser.add_argument("--busbra-metadata", "--busbra-csv", dest="busbra_metadata", type=Path, required=True,
+                        help="BUS-BRA CSV/XLS/XLSX metadata table")
+    parser.add_argument("--breast-root", type=Path, required=True)
+    parser.add_argument("--breast-xlsx", type=Path, required=True)
+    parser.add_argument("--busi-root", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path, default=Path("data/manifests"))
+    parser.add_argument("--data-root", type=Path, default=Path("data"),
+                        help="Root used to make portable relative image paths")
+    parser.add_argument("--seed", type=int, default=566)
+    parser.add_argument("--allow-image-split", action="store_true")
+    args = parser.parse_args()
+
+    summary = prepare_all(args.busbra_root, args.busbra_metadata, args.breast_root,
+                          args.breast_xlsx, args.busi_root, args.output_dir,
+                          args.seed, args.allow_image_split, args.data_root)
+    for name, values in summary.items():
+        print(f"{name}: n={values['total']}, benign={values['benign']}, malignant={values['malignant']}")
 
 
 if __name__ == "__main__":

@@ -26,12 +26,14 @@ def build_transform(image_size: int, train: bool):
 
 
 class UltrasoundDataset(Dataset):
-    def __init__(self, manifest: str | Path, image_size: int = 224, train: bool = False):
+    def __init__(self, manifest: str | Path, image_size: int = 224, train: bool = False,
+                 data_root: str | Path = "data"):
         self.frame = pd.read_csv(manifest)
         required = {"image_path", "label", "dataset", "sample_id"}
         missing = required - set(self.frame.columns)
         if missing:
             raise ValueError(f"Manifest {manifest} is missing columns: {sorted(missing)}")
+        self.data_root = Path(data_root).resolve()
         self.transform = build_transform(image_size, train)
 
     def __len__(self):
@@ -39,7 +41,10 @@ class UltrasoundDataset(Dataset):
 
     def __getitem__(self, index):
         row = self.frame.iloc[index]
-        with Image.open(row.image_path) as image:
+        image_path = Path(row.image_path)
+        if not image_path.is_absolute():
+            image_path = self.data_root / image_path
+        with Image.open(image_path) as image:
             image = image.convert("RGB")
             tensor = self.transform(image)
         return {
@@ -50,8 +55,8 @@ class UltrasoundDataset(Dataset):
         }
 
 
-def make_loader(manifest, image_size, batch_size, num_workers, train=False):
-    dataset = UltrasoundDataset(manifest, image_size=image_size, train=train)
+def make_loader(manifest, image_size, batch_size, num_workers, train=False, data_root="data"):
+    dataset = UltrasoundDataset(manifest, image_size=image_size, train=train, data_root=data_root)
     return DataLoader(
         dataset,
         batch_size=batch_size,

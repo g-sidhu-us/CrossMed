@@ -13,14 +13,12 @@ from .train import predict
 from .utils import load_config, save_json, seed_everything
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/baseline.yaml")
-    parser.add_argument("--checkpoint", default=None)
-    args = parser.parse_args()
-    cfg = load_config(args.config); seed_everything(cfg["seed"])
+def evaluate_experiment(config="configs/baseline.yaml", checkpoint=None):
+    """Evaluate one checkpoint on in-domain and external datasets."""
+    cfg = load_config(config) if isinstance(config, (str, Path)) else config
+    seed_everything(cfg["seed"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    checkpoint_path = Path(args.checkpoint or Path(cfg["output_dir"]) / "best.pt")
+    checkpoint_path = Path(checkpoint or Path(cfg["output_dir"]) / "best.pt")
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     model = build_model(**cfg["model"]).to(device)
     model.load_state_dict(checkpoint["model_state"])
@@ -33,7 +31,8 @@ def main():
     }
     results, prediction_frames = {}, []
     for name, manifest in sets.items():
-        loader = make_loader(manifest, data_cfg["image_size"], data_cfg["eval_batch_size"], data_cfg["num_workers"])
+        loader = make_loader(manifest, data_cfg["image_size"], data_cfg["eval_batch_size"],
+                             data_cfg["num_workers"], data_root=data_cfg.get("root", "data"))
         y, p, ids = predict(model, loader, device)
         metrics = classification_metrics(y, p, eval_cfg["threshold"])
         metrics["confidence_intervals_95"] = bootstrap_ci(y, p, eval_cfg["threshold"], eval_cfg["bootstrap_samples"], cfg["seed"])
@@ -51,6 +50,15 @@ def main():
     save_json(results, output / "evaluation.json")
     pd.concat(prediction_frames, ignore_index=True).to_csv(output / "predictions.csv", index=False)
     print(pd.DataFrame(results).T[["n", "accuracy", "balanced_accuracy", "f1", "roc_auc"]])
+    return results
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", default="configs/baseline.yaml")
+    parser.add_argument("--checkpoint", default=None)
+    args = parser.parse_args()
+    evaluate_experiment(args.config, args.checkpoint)
 
 
 if __name__ == "__main__":

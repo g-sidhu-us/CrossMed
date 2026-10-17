@@ -1,6 +1,7 @@
 seed: 566
 
 data:
+  root: data
   manifests_dir: data/manifests
   image_size: 224
   num_workers: 4

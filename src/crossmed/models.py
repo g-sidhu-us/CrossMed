@@ -15,6 +15,11 @@ def build_model(architecture="resnet18", pretrained=True, dropout=0.2):
         model = models.efficientnet_b0(weights=weights)
         features = model.classifier[-1].in_features
         model.classifier = nn.Sequential(nn.Dropout(dropout), nn.Linear(features, 2))
+    elif architecture == "vit_b_16":
+        weights = models.ViT_B_16_Weights.DEFAULT if pretrained else None
+        model = models.vit_b_16(weights=weights)
+        features = model.heads.head.in_features
+        model.heads = nn.Sequential(nn.Dropout(dropout), nn.Linear(features, 2))
     else:
         raise ValueError(f"Unsupported architecture: {architecture}")
     return model

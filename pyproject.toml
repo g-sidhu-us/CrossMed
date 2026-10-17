@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "breast-us-generalization"
+name = "crossmed"
 version = "0.1.0"
 description = "Cross-dataset breast ultrasound classification benchmark"
 requires-python = ">=3.10"
@@ -22,9 +22,9 @@ dependencies = [
 ]
 
 [project.scripts]
-bus-prepare = "bus_generalization.prepare:main"
-bus-train = "bus_generalization.train:main"
-bus-evaluate = "bus_generalization.evaluate:main"
+crossmed-prepare = "crossmed.prepare:main"
+crossmed-train = "crossmed.train:main"
+crossmed-evaluate = "crossmed.evaluate:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,4 +1,4 @@
-from bus_generalization.metrics import classification_metrics
+from crossmed.metrics import classification_metrics
 
 
 def test_metrics_perfect_predictions():

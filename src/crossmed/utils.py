@@ -10,8 +10,19 @@ import yaml
 
 
 def load_config(path: str | Path) -> dict:
-    with Path(path).open(encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
+    path = Path(path).resolve()
+    with path.open(encoding="utf-8") as handle:
+        config = yaml.safe_load(handle)
+    # Config files live in <project>/configs; resolve project paths from there.
+    project_root = path.parent.parent
+    for key in ("root", "manifests_dir"):
+        value = Path(config["data"][key])
+        if not value.is_absolute():
+            config["data"][key] = str(project_root / value)
+    output = Path(config["output_dir"])
+    if not output.is_absolute():
+        config["output_dir"] = str(project_root / output)
+    return config
 
 
 def seed_everything(seed: int) -> None:

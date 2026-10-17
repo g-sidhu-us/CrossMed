@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from bus_generalization.prepare import prepare_busi
+from crossmed.prepare import prepare_busi
 
 
 def test_busi_ignores_masks_and_normal(tmp_path: Path):

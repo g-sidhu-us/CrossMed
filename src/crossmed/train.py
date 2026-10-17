@@ -26,18 +26,18 @@ def predict(model, loader, device):
     return np.asarray(labels), np.asarray(probabilities), ids
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/baseline.yaml")
-    args = parser.parse_args()
-    cfg = load_config(args.config)
+def train_experiment(config="configs/baseline.yaml"):
+    """Train one configured experiment and return its history and checkpoint path."""
+    cfg = load_config(config) if isinstance(config, (str, Path)) else config
     seed_everything(cfg["seed"])
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     paths = cfg["data"]
     manifests = Path(paths["manifests_dir"])
     train_manifest, val_manifest = manifests / "busbra_train.csv", manifests / "busbra_val.csv"
-    train_loader = make_loader(train_manifest, paths["image_size"], paths["train_batch_size"], paths["num_workers"], True)
-    val_loader = make_loader(val_manifest, paths["image_size"], paths["eval_batch_size"], paths["num_workers"])
+    train_loader = make_loader(train_manifest, paths["image_size"], paths["train_batch_size"],
+                               paths["num_workers"], True, paths.get("root", "data"))
+    val_loader = make_loader(val_manifest, paths["image_size"], paths["eval_batch_size"],
+                             paths["num_workers"], data_root=paths.get("root", "data"))
 
     model = build_model(**cfg["model"]).to(device)
     train_cfg = cfg["training"]
@@ -72,6 +72,15 @@ def main():
             if stale >= train_cfg["patience"]:
                 break
     save_json({"history": history, "best_validation_score": best}, output / "training_history.json")
+    return {"history": history, "best_validation_score": best,
+            "checkpoint_path": str(output / "best.pt")}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", default="configs/baseline.yaml")
+    args = parser.parse_args()
+    train_experiment(args.config)
 
 
 if __name__ == "__main__":
