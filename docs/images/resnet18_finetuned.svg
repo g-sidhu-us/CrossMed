@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360">
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#496078"/></marker><style>text{font-family:Arial,sans-serif;fill:#17263a}.title{font-size:28px;font-weight:700}.sub{font-size:17px;fill:#496078}.h{font-size:20px;font-weight:700}.b{font-size:16px}.box{stroke-width:2;rx:16}.arrow{stroke:#496078;stroke-width:3;marker-end:url(#a)}</style></defs>
+  <rect width="1200" height="360" fill="#f6f8fb"/>
+  <text x="60" y="48" class="title">Architecture A — Fully Trainable ResNet-18 Baseline</text>
+  <text x="60" y="76" class="sub">All pretrained feature weights and the binary head are optimized on BUS-BRA</text>
+  <rect x="55" y="130" width="180" height="120" class="box" fill="#e8f1ff" stroke="#3b78c8"/>
+  <text x="145" y="178" class="h" text-anchor="middle">Input</text><text x="145" y="208" class="b" text-anchor="middle">224 × 224 × 3</text>
+  <line x1="235" y1="190" x2="310" y2="190" class="arrow"/>
+  <rect x="315" y="112" width="285" height="156" class="box" fill="#e7f7ef" stroke="#269365"/>
+  <text x="458" y="163" class="h" text-anchor="middle">ResNet-18</text><text x="458" y="193" class="b" text-anchor="middle">ImageNet initialization</text><text x="458" y="222" class="b" text-anchor="middle">512-D feature vector</text><text x="458" y="249" class="b" text-anchor="middle" fill="#16724b">FULLY TRAINABLE</text>
+  <line x1="600" y1="190" x2="675" y2="190" class="arrow"/>
+  <rect x="680" y="130" width="180" height="120" class="box" fill="#fff3dd" stroke="#d58a18"/>
+  <text x="770" y="178" class="h" text-anchor="middle">Dropout</text><text x="770" y="208" class="b" text-anchor="middle">p = 0.2</text>
+  <line x1="860" y1="190" x2="935" y2="190" class="arrow"/>
+  <rect x="940" y="130" width="205" height="120" class="box" fill="#f5eaff" stroke="#8454bd"/>
+  <text x="1043" y="174" class="h" text-anchor="middle">Linear 512 → 2</text><text x="1043" y="205" class="b" text-anchor="middle">Benign / Malignant</text><text x="1043" y="230" class="b" text-anchor="middle">raw logits</text>
+  <text x="60" y="322" class="sub">Loss: weighted cross-entropy  •  Optimizer: AdamW  •  Model selection: validation ROC-AUC</text>
+</svg>

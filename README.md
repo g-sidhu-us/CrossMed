@@ -167,6 +167,10 @@ report or presentation.
 
 ## Classifier architectures
 
+### Fully trainable baseline
+
+![Fully trainable ResNet-18 baseline](docs/images/resnet18_finetuned.svg)
+
 CrossMed keeps the existing simple head as the primary baseline:
 
 ```text
@@ -174,6 +178,10 @@ trainable pretrained backbone -> Dropout(0.2) -> Linear(2)
 ```
 
 It also reproduces the architecture from the supplied project notebook:
+
+### Frozen ResNet experiments
+
+![Frozen ResNet with MLP classifier](docs/images/resnet_frozen_mlp.svg)
 
 ```text
 frozen pretrained CNN -> global average pooling -> Linear(256) -> ReLU
@@ -191,6 +199,10 @@ The notebook's VGG16, ResNet50, ResNet101, and EfficientNetB0 backbones are
 available as `vgg16`, `resnet50`, `resnet101`, and `efficientnet_b0`. See
 `ARCHITECTURE.md` for layer details, PyTorch/Keras equivalences, and the fair
 head-ablation protocol.
+
+### Frozen ViT experiment
+
+![Frozen ViT-B/16 with MLP classifier](docs/images/vit_frozen_mlp.svg)
 
 An additional fully fine-tuned ViT configuration remains available as an
 optional extension:

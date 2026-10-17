@@ -6,6 +6,8 @@ are evaluated on exactly the same fixed dataset manifests.
 
 ## Architecture A: simple fine-tuning baseline
 
+![Fully trainable ResNet-18 baseline](docs/images/resnet18_finetuned.svg)
+
 ```text
 Image -> pretrained backbone -> feature vector -> Dropout(0.2)
       -> Linear(feature_dim, 2) -> benign/malignant logits
@@ -26,6 +28,8 @@ model:
 ```
 
 ## Architecture B: reference-notebook transfer learning
+
+![Frozen ResNet with MLP classifier](docs/images/resnet_frozen_mlp.svg)
 
 The supplied reference notebook uses a frozen ImageNet feature extractor and
 the following classifier:
@@ -96,6 +100,8 @@ generalization gaps.
 
 For frozen ViT-B/16, the encoder's 768-dimensional CLS representation is fed
 to the same 256-unit MLP. ViT does not use the CNN global-average-pooling step.
+
+![Frozen ViT-B/16 with MLP classifier](docs/images/vit_frozen_mlp.svg)
 
 All primary systems are registered in `configs/experiment_matrix.yaml` and can
 be executed through `crossmed-run` or notebook 04. Aggregate results are saved
