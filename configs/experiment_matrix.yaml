@@ -11,5 +11,8 @@ experiments:
   resnet18_frozen_mlp: resnet18_frozen.yaml
   resnet50_frozen_mlp: resnet50_frozen.yaml
   resnet101_frozen_mlp: resnet101_frozen.yaml
-  vit_b16_frozen: vit_frozen.yaml
+  vit_b16_finetuned_simple: vit.yaml
+  vit_b16_finetuned_mlp: vit_finetuned_mlp.yaml
+  vit_b16_frozen_simple: vit_frozen_simple.yaml
+  vit_b16_frozen_mlp: vit_frozen.yaml
 

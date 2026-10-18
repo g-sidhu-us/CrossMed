@@ -95,7 +95,7 @@ unclear. CrossMed therefore uses a staged ablation:
 - Stage 2: ResNet-18/50/101, frozen, simple head.
 - Stage 3: ResNet-18/50/101 with the MLP head under both frozen and fully
   trainable weight conditions.
-- Stage 4: compare the selected CNN with ViT.
+- Stage 4: repeat the same frozen/trainable × simple/MLP design for ViT-B/16.
 
 The complete ResNet design is factorial:
 
@@ -107,6 +107,11 @@ The complete ResNet design is factorial:
 This produces four conditions for each of ResNet-18, ResNet-50, and
 ResNet-101. It allows the effect of weight adaptation, head depth, and their
 interaction to be measured separately.
+
+ViT-B/16 uses the same four conditions. Its simple head is `768 -> 2`, and its
+MLP head is `768 -> 256 -> 2`. When frozen, the full ViT feature extractor stays
+in evaluation mode; when fine-tuned, the patch embedding and all Transformer
+encoder blocks are trainable.
 
 Keep the seed, manifests, augmentation, optimizer, training budget, and model
 selection criterion identical. Compare in-domain performance and both external

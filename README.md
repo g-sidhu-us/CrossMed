@@ -151,7 +151,10 @@ The complete registry is:
 | Frozen-simple R50 | ResNet-50 | Frozen | Simple | `resnet50_frozen_simple.yaml` |
 | Frozen-simple R101 | ResNet-101 | Frozen | Simple | `resnet101_frozen_simple.yaml` |
 | Frozen-MLP R18/R50/R101 | ResNet family | Frozen | 256-unit MLP | existing frozen configs |
-| Frozen ViT | ViT-B/16 | Frozen | 256-unit MLP | `vit_frozen.yaml` |
+| Fine-tuned-simple ViT | ViT-B/16 | Fully trainable | Simple | `vit.yaml` |
+| Fine-tuned-MLP ViT | ViT-B/16 | Fully trainable | 256-unit MLP | `vit_finetuned_mlp.yaml` |
+| Frozen-simple ViT | ViT-B/16 | Frozen | Simple | `vit_frozen_simple.yaml` |
+| Frozen-MLP ViT | ViT-B/16 | Frozen | 256-unit MLP | `vit_frozen.yaml` |
 
 For each ResNet depth, the controlled comparison is:
 
@@ -159,6 +162,10 @@ For each ResNet depth, the controlled comparison is:
 |---|---|---|
 | Frozen | Yes | Yes |
 | Fully trainable | Yes | Yes |
+
+The same four-condition comparison is used for ViT-B/16. For ViT, “feature
+weights” means the patch projection, positional embedding, CLS token processing,
+and Transformer encoder weights.
 
 Run at least three seeds for the final selected experiments. The frozen
 ResNet sequence tests whether larger pretrained feature extractors generalize
